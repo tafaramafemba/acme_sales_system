@@ -32,3 +32,32 @@ class DeliveryRule
     rule[:cost]
   end
 end
+
+# STEP 4: Offer base class using strategy pattern
+class Offer
+  def apply(items)
+    items
+  end
+end
+
+# STEP 5: Red widget offer implementation
+class RedWidgetOffer < Offer
+  def apply(items)
+    red_widgets = items.select { |i| i.code == 'R01' }
+    return items if red_widgets.size < 2
+
+    count = 0
+    items.map do |item|
+      if item.code == 'R01'
+        count += 1
+        if count.even?
+          Product.new(code: item.code, name: item.name, price: item.price / 2)
+        else
+          item
+        end
+      else
+        item
+      end
+    end
+  end
+end
