@@ -12,7 +12,7 @@ end
 # STEP 2: Catalogue to look up products by code
 class Catalogue
   def initialize(products)
-    @products = products.index_by(&:code)
+    @products = products.each_with_object({}) { |p, h| h[p.code] = p }
   end
 
   def find(code)
@@ -94,8 +94,13 @@ end
 
 # STEP 7: CLI-style usage example for testing
 if __FILE__ == $0
-  require 'active_support/core_ext/hash/indifferent_access'
-  require 'active_support/core_ext/enumerable'
+
+  def run_test(product_codes, expected, catalogue, delivery_rule, offers)
+    basket = Basket.new(catalogue: catalogue, delivery_rule: delivery_rule, offers: offers)
+    product_codes.each { |code| basket.add(code) }
+    total = basket.total
+    puts "Products: #{product_codes.join(', ')} => Total: $#{'%.2f' % total} | #{total == expected ? 'PASS' : "FAIL (Expected $#{expected})"}"
+  end
 
   products = [
     Product.new(code: 'R01', name: 'Red Widget', price: 32.95),
@@ -112,15 +117,8 @@ if __FILE__ == $0
   catalogue = Catalogue.new(products)
   offers = [RedWidgetOffer.new]
 
-  def run_test(product_codes, expected)
-    basket = Basket.new(catalogue: catalogue, delivery_rule: delivery_rule, offers: offers)
-    product_codes.each { |code| basket.add(code) }
-    total = basket.total
-    puts "Products: #{product_codes.join(', ')} => Total: $#{'%.2f' % total} | #{total == expected ? 'PASS' : "FAIL (Expected $#{expected})"}"
-  end
-
-  run_test(%w[B01 G01], 37.85)
-  run_test(%w[R01 R01], 54.37)
-  run_test(%w[R01 G01], 60.85)
-  run_test(%w[B01 B01 R01 R01 R01], 98.27)
+  run_test(%w[B01 G01], 37.85, catalogue, delivery_rule, offers)
+  run_test(%w[R01 R01], 54.37, catalogue, delivery_rule, offers)
+  run_test(%w[R01 G01], 60.85, catalogue, delivery_rule, offers)
+  run_test(%w[B01 B01 R01 R01 R01], 98.27, catalogue, delivery_rule, offers)
 end
