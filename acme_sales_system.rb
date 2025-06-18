@@ -91,3 +91,36 @@ class Basket
     (subtotal + delivery).round(2)
   end
 end
+
+# STEP 7: CLI-style usage example for testing
+if __FILE__ == $0
+  require 'active_support/core_ext/hash/indifferent_access'
+  require 'active_support/core_ext/enumerable'
+
+  products = [
+    Product.new(code: 'R01', name: 'Red Widget', price: 32.95),
+    Product.new(code: 'G01', name: 'Green Widget', price: 24.95),
+    Product.new(code: 'B01', name: 'Blue Widget', price: 7.95)
+  ]
+
+  delivery_rule = DeliveryRule.new([
+    { min: 0, max: 50, cost: 4.95 },
+    { min: 50, max: 90, cost: 2.95 },
+    { min: 90, max: Float::INFINITY, cost: 0.0 }
+  ])
+
+  catalogue = Catalogue.new(products)
+  offers = [RedWidgetOffer.new]
+
+  def run_test(product_codes, expected)
+    basket = Basket.new(catalogue: catalogue, delivery_rule: delivery_rule, offers: offers)
+    product_codes.each { |code| basket.add(code) }
+    total = basket.total
+    puts "Products: #{product_codes.join(', ')} => Total: $#{'%.2f' % total} | #{total == expected ? 'PASS' : "FAIL (Expected $#{expected})"}"
+  end
+
+  run_test(%w[B01 G01], 37.85)
+  run_test(%w[R01 R01], 54.37)
+  run_test(%w[R01 G01], 60.85)
+  run_test(%w[B01 B01 R01 R01 R01], 98.27)
+end
