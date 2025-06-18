@@ -19,3 +19,16 @@ class Catalogue
     @products[code]
   end
 end
+
+# STEP 3: Delivery rule thresholds by subtotal
+class DeliveryRule
+  def initialize(thresholds)
+    # thresholds: [{ min: 0, max: 50, cost: 4.95 }, ...]
+    @thresholds = thresholds
+  end
+
+  def delivery_cost(subtotal)
+    rule = @thresholds.find { |r| subtotal >= r[:min] && subtotal < r[:max] } || { cost: 0.0 }
+    rule[:cost]
+  end
+end
