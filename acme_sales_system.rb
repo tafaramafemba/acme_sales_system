@@ -61,3 +61,33 @@ class RedWidgetOffer < Offer
     end
   end
 end
+
+# STEP 6: Final Basket class as required by the assignment
+class Basket
+  def initialize(catalogue:, delivery_rule:, offers: [])
+    @catalogue = catalogue
+    @delivery_rule = delivery_rule
+    @offers = offers
+    @items = []
+  end
+
+  # Adds product by product code
+  def add(product_code)
+    product = @catalogue.find(product_code)
+    raise ArgumentError, "Invalid product code: #{product_code}" unless product
+
+    @items << product
+  end
+
+  # Returns total as Float (rounded to 2 decimal places)
+  def total
+    items_with_offers = @offers.reduce(@items.dup) do |items, offer|
+      offer.apply(items)
+    end
+
+    subtotal = items_with_offers.sum(&:price)
+    delivery = @delivery_rule.delivery_cost(subtotal)
+
+    (subtotal + delivery).round(2)
+  end
+end
